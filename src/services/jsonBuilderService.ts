@@ -10,46 +10,11 @@ export const generateJsonBuilder = async (formData: FormData) => {
       throw new Error(`Erro: ${response.status}`);
     }
 
+    // Return the actual response from the API
     return await response.json();
   } catch (error) {
     console.error('API Error:', error);
-    
-    // Return fallback data for development/testing
-    return {
-      flow: {
-        onboarding: {
-          '$contentActions': ['example'],
-          '$conditionOutputs': ['example'],
-          '$enteringCustomActions': [],
-          '$leavingCustomActions': [],
-          '$inputSuggestions': [],
-          '$defaultOutput': { stateId: 'welcome', '$invalid': false },
-          '$tags': [],
-          id: 'onboarding',
-          root: true,
-          '$title': 'Início',
-          '$position': { x: 139, y: 114 },
-          '$invalidContentActions': false,
-          '$invalidOutputs': false,
-          '$invalidCustomActions': false,
-          '$invalid': false
-        },
-        // ... more states would be here in a real response
-      },
-      globalActions: {
-        '$contentActions': [],
-        '$conditionOutputs': [],
-        '$enteringCustomActions': [],
-        '$leavingCustomActions': [],
-        '$inputSuggestions': [],
-        '$defaultOutput': { stateId: 'fallback', '$invalid': false },
-        '$tags': [],
-        id: 'global-actions',
-        '$invalidContentActions': false,
-        '$invalidOutputs': false,
-        '$invalidCustomActions': false,
-        '$invalid': false
-      }
-    };
+    // Rethrow the error so it can be handled by the component
+    throw error;
   }
 };

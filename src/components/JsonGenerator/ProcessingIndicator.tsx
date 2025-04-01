@@ -17,6 +17,7 @@ const ProcessingIndicator: React.FC<ProcessingIndicatorProps> = ({
         <h3 className="text-sm font-medium text-blip-tertiary">
           Gerando JSON... {processingTime}s
         </h3>
+        <span className="text-xs text-gray-500">{Math.round(progressValue)}%</span>
       </div>
       <Progress value={progressValue} className="h-2 bg-gray-200" />
       <p className="text-xs text-gray-500 mt-2 text-center">

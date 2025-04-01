@@ -29,8 +29,8 @@ export const useProcessingTimer = () => {
     timerRef.current = setInterval(() => {
       setProcessingTime(prev => {
         const newTime = prev + 1;
-        // Gradually increase progress based on time
-        setProgressValue(Math.min(newTime * 5, 95)); // Caps at 95% until complete
+        // Slower progress animation: max 70% until complete, increase at 2% per second
+        setProgressValue(Math.min(newTime * 2, 70)); 
         return newTime;
       });
     }, 1000);
