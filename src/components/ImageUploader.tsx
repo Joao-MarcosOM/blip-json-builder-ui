@@ -1,76 +1,26 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Upload, Copy, Check } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
-import { Progress } from "@/components/ui/progress";
+
+// Import new components
+import FileUploadArea from './JsonGenerator/FileUploadArea';
+import JsonDisplay from './JsonGenerator/JsonDisplay';
+import ProcessingIndicator from './JsonGenerator/ProcessingIndicator';
+import { useProcessingTimer } from '@/hooks/useProcessingTimer';
+import { generateJsonBuilder } from '@/services/jsonBuilderService';
 
 const ImageUploader = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [jsonResponse, setJsonResponse] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
-  const [processingTime, setProcessingTime] = useState(0);
-  const [progressValue, setProgressValue] = useState(0);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const { processingTime, progressValue, startTimer, stopTimer } = useProcessingTimer();
 
-  // Clean up timer on unmount
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    };
-  }, []);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
-      setJsonResponse(null);
-    }
-  };
-
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-  };
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      setSelectedFile(e.dataTransfer.files[0]);
-      setJsonResponse(null);
-    }
-  };
-
-  const startTimer = () => {
-    // Reset processing time and progress
-    setProcessingTime(0);
-    setProgressValue(0);
-    
-    // Clear any existing timers
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-    }
-    
-    // Start a new timer
-    timerRef.current = setInterval(() => {
-      setProcessingTime(prev => {
-        const newTime = prev + 1;
-        // Gradually increase progress based on time
-        setProgressValue(Math.min(newTime * 5, 95)); // Caps at 95% until complete
-        return newTime;
-      });
-    }, 1000);
-  };
-
-  const stopTimer = () => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    setProgressValue(100); // Complete the progress bar
+  const handleFileChange = (file: File) => {
+    setSelectedFile(file);
+    setJsonResponse(null);
   };
 
   const handleUpload = async () => {
@@ -88,67 +38,12 @@ const ImageUploader = () => {
     startTimer();
 
     try {
-      // For demonstration purposes, we'll simulate a successful API response
-      // since the actual endpoint is not accessible during development
       const formData = new FormData();
       formData.append('file', selectedFile);
       formData.append('purpose', 'assistants');
 
-      // Try to make the actual API call
-      let data;
-      try {
-        const response = await fetch('http://127.0.0.1:8080/builderJson/generateBuilder', {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (!response.ok) {
-          throw new Error(`Erro: ${response.status}`);
-        }
-
-        data = await response.json();
-      } catch (fetchError) {
-        console.error('Fetch error:', fetchError);
-        // Simulate a response for development/testing purposes
-        // This will show how the UI handles the response without requiring the actual API
-        data = {
-          flow: {
-            onboarding: {
-              '$contentActions': ['example'],
-              '$conditionOutputs': ['example'],
-              '$enteringCustomActions': [],
-              '$leavingCustomActions': [],
-              '$inputSuggestions': [],
-              '$defaultOutput': { stateId: 'welcome', '$invalid': false },
-              '$tags': [],
-              id: 'onboarding',
-              root: true,
-              '$title': 'Início',
-              '$position': { x: 139, y: 114 },
-              '$invalidContentActions': false,
-              '$invalidOutputs': false,
-              '$invalidCustomActions': false,
-              '$invalid': false
-            },
-            // ... more states would be here in a real response
-          },
-          globalActions: {
-            '$contentActions': [],
-            '$conditionOutputs': [],
-            '$enteringCustomActions': [],
-            '$leavingCustomActions': [],
-            '$inputSuggestions': [],
-            '$defaultOutput': { stateId: 'fallback', '$invalid': false },
-            '$tags': [],
-            id: 'global-actions',
-            '$invalidContentActions': false,
-            '$invalidOutputs': false,
-            '$invalidCustomActions': false,
-            '$invalid': false
-          }
-        };
-      }
-
+      const data = await generateJsonBuilder(formData);
+      
       stopTimer();
       setJsonResponse(JSON.stringify(data, null, 2));
       
@@ -169,16 +64,9 @@ const ImageUploader = () => {
     }
   };
 
-  const handleCopyToClipboard = () => {
-    if (jsonResponse) {
-      navigator.clipboard.writeText(jsonResponse);
-      setCopied(true);
-      toast({
-        title: "Copiado!",
-        description: "JSON copiado para a área de transferência.",
-      });
-      setTimeout(() => setCopied(false), 2000);
-    }
+  const handleClear = () => {
+    setSelectedFile(null);
+    setJsonResponse(null);
   };
 
   return (
@@ -189,88 +77,30 @@ const ImageUploader = () => {
           <CardDescription>Faça upload de uma imagem para gerar o JSON Builder</CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
-          <div 
-            className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
-              ${selectedFile ? 'border-blip-primary bg-blip-primary/5' : 'border-gray-300 hover:border-blip-primary/50'}`}
-            onClick={() => fileInputRef.current?.click()}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-          >
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              accept="image/*"
-              className="hidden"
-            />
-            <Upload className="mx-auto h-12 w-12 text-blip-secondary mb-4" />
-            {selectedFile ? (
-              <div>
-                <p className="text-sm font-medium mb-1">Imagem selecionada:</p>
-                <p className="text-sm text-gray-600 break-all">{selectedFile.name}</p>
-                <p className="text-xs text-gray-500 mt-1">
-                  {(selectedFile.size / 1024).toFixed(2)} KB
-                </p>
-                <div className="mt-4">
-                  <img 
-                    src={URL.createObjectURL(selectedFile)} 
-                    alt="Preview" 
-                    className="max-h-32 mx-auto object-contain rounded" 
-                  />
-                </div>
-              </div>
-            ) : (
-              <div>
-                <p className="text-sm font-medium">Arraste uma imagem ou clique para selecionar</p>
-                <p className="text-xs text-gray-500 mt-1">PNG, JPG ou GIF (max. 10MB)</p>
-              </div>
-            )}
-          </div>
+          <FileUploadArea 
+            selectedFile={selectedFile} 
+            onFileChange={handleFileChange} 
+          />
 
           {isLoading && (
-            <div className="mt-6 animate-fade-in">
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="text-sm font-medium text-blip-tertiary">
-                  Gerando JSON... {processingTime}s
-                </h3>
-              </div>
-              <Progress value={progressValue} className="h-2 bg-gray-200" />
-              <p className="text-xs text-gray-500 mt-2 text-center">
-                Processando a imagem e gerando o JSON Builder
-              </p>
+            <div className="mt-6">
+              <ProcessingIndicator 
+                processingTime={processingTime} 
+                progressValue={progressValue} 
+              />
             </div>
           )}
 
           {jsonResponse && (
-            <div className="mt-6 animate-fade-in">
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="text-sm font-medium text-blip-tertiary">Resposta JSON</h3>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleCopyToClipboard}
-                  className="text-xs"
-                >
-                  {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
-                  {copied ? "Copiado!" : "Copiar"}
-                </Button>
-              </div>
-              <div className="bg-gray-100 p-4 rounded-md overflow-x-auto text-xs max-h-96 overflow-y-auto">
-                <pre>{jsonResponse}</pre>
-              </div>
+            <div className="mt-6">
+              <JsonDisplay jsonResponse={jsonResponse} />
             </div>
           )}
         </CardContent>
         <CardFooter className="flex justify-end gap-2 border-t pt-4">
           <Button 
             variant="outline" 
-            onClick={() => {
-              setSelectedFile(null);
-              setJsonResponse(null);
-              if (fileInputRef.current) {
-                fileInputRef.current.value = '';
-              }
-            }}
+            onClick={handleClear}
             disabled={isLoading || (!selectedFile && !jsonResponse)}
           >
             Limpar
