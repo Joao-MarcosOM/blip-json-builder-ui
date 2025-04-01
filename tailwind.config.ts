@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,15 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+        // Blip colors
+        blip: {
+          primary: '#9b87f5',
+          secondary: '#7E69AB',
+          tertiary: '#6E59A5',
+          dark: '#1A1F2C',
+          light: '#D6BCFA',
+        }
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
