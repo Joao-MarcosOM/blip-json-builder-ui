@@ -1,16 +1,29 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Upload, Copy, Check } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
+import { Progress } from "@/components/ui/progress";
 
 const ImageUploader = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [jsonResponse, setJsonResponse] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [processingTime, setProcessingTime] = useState(0);
+  const [progressValue, setProgressValue] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -31,6 +44,35 @@ const ImageUploader = () => {
     }
   };
 
+  const startTimer = () => {
+    // Reset processing time and progress
+    setProcessingTime(0);
+    setProgressValue(0);
+    
+    // Clear any existing timers
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    
+    // Start a new timer
+    timerRef.current = setInterval(() => {
+      setProcessingTime(prev => {
+        const newTime = prev + 1;
+        // Gradually increase progress based on time
+        setProgressValue(Math.min(newTime * 5, 95)); // Caps at 95% until complete
+        return newTime;
+      });
+    }, 1000);
+  };
+
+  const stopTimer = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    setProgressValue(100); // Complete the progress bar
+  };
+
   const handleUpload = async () => {
     if (!selectedFile) {
       toast({
@@ -43,6 +85,7 @@ const ImageUploader = () => {
 
     setIsLoading(true);
     setJsonResponse(null);
+    startTimer();
 
     try {
       const formData = new FormData();
@@ -59,6 +102,7 @@ const ImageUploader = () => {
       }
 
       const data = await response.json();
+      stopTimer();
       setJsonResponse(JSON.stringify(data, null, 2));
       
       toast({
@@ -66,6 +110,7 @@ const ImageUploader = () => {
         description: "JSON gerado com sucesso.",
       });
     } catch (error) {
+      stopTimer();
       console.error('Error:', error);
       toast({
         title: "Erro ao processar a imagem",
@@ -135,8 +180,22 @@ const ImageUploader = () => {
             )}
           </div>
 
+          {isLoading && (
+            <div className="mt-6 animate-fade-in">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="text-sm font-medium text-blip-tertiary">
+                  Gerando JSON... {processingTime}s
+                </h3>
+              </div>
+              <Progress value={progressValue} className="h-2 bg-gray-200" />
+              <p className="text-xs text-gray-500 mt-2 text-center">
+                Processando a imagem e gerando o JSON Builder
+              </p>
+            </div>
+          )}
+
           {jsonResponse && (
-            <div className="mt-6">
+            <div className="mt-6 animate-fade-in">
               <div className="flex justify-between items-center mb-2">
                 <h3 className="text-sm font-medium text-blip-tertiary">Resposta JSON</h3>
                 <Button 
