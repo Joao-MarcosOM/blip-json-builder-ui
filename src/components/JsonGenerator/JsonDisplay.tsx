@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Copy, Check, AlertTriangle } from "lucide-react";
+import { Copy, Check } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 
 interface JsonDisplayProps {
-  jsonResponse: any; // Accept any type of response
+  jsonResponse: any;
 }
 
 const JsonDisplay: React.FC<JsonDisplayProps> = ({ jsonResponse }) => {
@@ -13,46 +12,76 @@ const JsonDisplay: React.FC<JsonDisplayProps> = ({ jsonResponse }) => {
   const [formattedJson, setFormattedJson] = useState<string>("");
 
   useEffect(() => {
-    // Format the JSON for display
     try {
       if (jsonResponse) {
-        // Format based on the type of response
         if (typeof jsonResponse === 'string') {
           try {
-            // If it's a valid JSON string, parse and format it
             const parsed = JSON.parse(jsonResponse);
             setFormattedJson(JSON.stringify(parsed, null, 2));
-          } catch (e) {
-            // If parsing fails, use the raw string
+          } catch {
             setFormattedJson(jsonResponse);
           }
         } else {
-          // If it's already an object/array, stringify it
           setFormattedJson(JSON.stringify(jsonResponse, null, 2));
         }
       }
     } catch (e) {
-      console.error('Error formatting JSON:', e);
-      // Fallback to string representation if formatting fails
+      console.error('Erro ao formatar JSON:', e);
       setFormattedJson(String(jsonResponse));
     }
   }, [jsonResponse]);
 
-  const handleCopyToClipboard = () => {
-    if (formattedJson) {
-      navigator.clipboard.writeText(formattedJson);
+  const fallbackCopyToClipboard = (text: string) => {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.opacity = "0";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    try {
+      const success = document.execCommand('copy');
+      return success;
+    } catch (err) {
+      console.error('Erro no fallback de cópia:', err);
+      return false;
+    } finally {
+      document.body.removeChild(textArea);
+    }
+  };
+
+  const handleCopyToClipboard = async () => {
+    if (!formattedJson) return;
+
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(formattedJson);
+      } else {
+        const fallbackSuccess = fallbackCopyToClipboard(formattedJson);
+        if (!fallbackSuccess) throw new Error('Falha no fallback de cópia');
+      }
+
       setCopied(true);
       toast({
         title: "Copiado!",
         description: "JSON copiado para a área de transferência.",
       });
+
       setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Erro ao copiar JSON:', err);
+      toast({
+        title: "Erro ao copiar",
+        description: "Não foi possível copiar o JSON para a área de transferência.",
+        variant: "destructive"
+      });
     }
   };
 
-  if (!formattedJson) {
-    return null;
-  }
+  if (!formattedJson) return null;
 
   return (
     <div className="animate-fade-in">
@@ -68,7 +97,7 @@ const JsonDisplay: React.FC<JsonDisplayProps> = ({ jsonResponse }) => {
           {copied ? "Copiado!" : "Copiar"}
         </Button>
       </div>
-      
+
       <div className="bg-gray-100 p-4 rounded-md overflow-x-auto text-xs max-h-96 overflow-y-auto">
         <pre className="whitespace-pre-wrap break-words">{formattedJson}</pre>
       </div>

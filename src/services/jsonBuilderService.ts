@@ -1,46 +1,60 @@
-
 export const generateJsonBuilder = async (formData: FormData) => {
   try {
-    // Set up base URL - use environment-specific endpoint
-    const baseUrl = window.location.hostname === 'localhost' 
-      ? 'http://127.0.0.1:8080' 
-      : 'http://127.0.0.1:8080'; // Always use local API for now
-    
-    console.log('Making API request to:', `${baseUrl}/builderJson/generateBuilder`);
-    
-    // Create custom fetch options to handle CORS properly
-    const requestOptions = {
+    // Define base URL dinamicamente (pode usar variável de ambiente no futuro)
+    const isLocalhost = window.location.hostname === 'localhost';
+    const baseUrl = isLocalhost
+      ? 'http://127.0.0.1:8080'
+      : 'http://127.0.0.1:8080'; // Substitua pela URL real em produção
+
+      console.log('Enrou');
+
+
+    const endpoint = `${baseUrl}/builderJson/generateBuilder`;
+    console.log('Fazendo requisição para:', endpoint);
+
+    // Loga conteúdo do formData para debug
+    for (const pair of formData.entries()) {
+      console.log(`${pair[0]}: ${pair[1]}`);
+    }
+
+    // Configuração da requisição
+    const requestOptions: RequestInit = {
       method: 'POST',
       body: formData,
       headers: {
         'Accept': 'application/json',
       },
-      // Using 'same-origin' for localhost or omit for cross-origin
-      credentials: 'include' as RequestCredentials,
-      mode: 'cors' as RequestMode,
+      credentials: 'include', // Garante que cookies sejam enviados, se necessário
+      mode: 'cors',
     };
-    
-    // Attempt the fetch with our custom options
-    const response = await fetch(`${baseUrl}/builderJson/generateBuilder`, requestOptions);
 
+    // Faz a requisição
+    const response = await fetch(endpoint, requestOptions);
+
+    console.log('Resposta recebida:', response);
+
+    // Trata erro de status HTTP
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Error: ${response.status} - ${errorText || response.statusText}`);
+      throw new Error(`Erro HTTP: ${response.status} - ${errorText || response.statusText}`);
     }
 
-    // Parse and return the response
+    // Parse do JSON
     const result = await response.json();
-    console.log('API Response received:', result);
+    console.log('Resposta JSON:', result);
     return result;
-  } catch (error) {
-    console.error('API Error:', error);
-    
-    // Specific error message for network-related issues
+
+  } catch (error: any) {
+    console.error('Erro na API:', error);
+
+    // Trata erro de rede
     if (error instanceof TypeError && error.message === 'Failed to fetch') {
-      throw new Error('Não foi possível conectar ao servidor. Verifique se o servidor está rodando em http://127.0.0.1:8080 e tente novamente.');
+      throw new Error(
+        'Não foi possível conectar ao servidor. Verifique se ele está rodando em http://127.0.0.1:8080 e se o CORS está corretamente configurado.'
+      );
     }
-    
-    // Rethrow the error so we can handle it properly
+
+    // Repassa outros erros
     throw error;
   }
 };
