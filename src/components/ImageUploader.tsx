@@ -109,9 +109,6 @@ const ImageUploader = () => {
                 <div>
                   <h3 className="text-sm font-medium text-red-800">Erro de conexão</h3>
                   <p className="text-sm text-red-700 mt-1">{error}</p>
-                  <p className="text-xs text-red-600 mt-2">
-                    Certifique-se de que o servidor está rodando na porta 8080 e tente novamente.
-                  </p>
                 </div>
               </div>
             </div>

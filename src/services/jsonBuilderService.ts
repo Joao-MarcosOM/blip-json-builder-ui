@@ -4,7 +4,7 @@ export const generateJsonBuilder = async (formData: FormData) => {
     // Set up base URL - use environment-specific endpoint
     const baseUrl = window.location.hostname === 'localhost' 
       ? 'http://127.0.0.1:8080' 
-      : 'https://api.example.com'; // Replace with your actual production API URL
+      : 'http://127.0.0.1:8080'; // Always use local API for now
     
     console.log('Making API request to:', `${baseUrl}/builderJson/generateBuilder`);
     
@@ -14,6 +14,8 @@ export const generateJsonBuilder = async (formData: FormData) => {
       headers: {
         'Accept': 'application/json',
       },
+      // Add credentials to handle CORS properly
+      credentials: 'include',
     });
 
     if (!response.ok) {
@@ -26,7 +28,12 @@ export const generateJsonBuilder = async (formData: FormData) => {
   } catch (error) {
     console.error('API Error:', error);
     
-    // Don't use mock data, rethrow the error so we can handle it properly
+    // Specific error message for network-related issues
+    if (error instanceof TypeError && error.message === 'Failed to fetch') {
+      throw new Error('Não foi possível conectar ao servidor. Verifique se o servidor está rodando em http://127.0.0.1:8080 e tente novamente.');
+    }
+    
+    // Rethrow the error so we can handle it properly
     throw error;
   }
 };
