@@ -45,10 +45,12 @@ const ImageUploader = () => {
       formData.append('file', selectedFile);
       formData.append('purpose', 'assistants');
 
-      const data = await generateJsonBuilder(formData);
+      // Make the actual API call and get the response
+      const response = await generateJsonBuilder(formData);
       
+      // Stop the timer and set the JSON response directly from the API
       stopTimer();
-      setJsonResponse(JSON.stringify(data, null, 2));
+      setJsonResponse(JSON.stringify(response, null, 2));
       
       toast({
         title: "Sucesso!",
@@ -94,6 +96,9 @@ const ImageUploader = () => {
                 processingTime={processingTime} 
                 progressValue={progressValue} 
               />
+              <p className="text-xs text-gray-500 mt-2 text-center">
+                Este processo pode levar até 4 minutos. Por favor, aguarde.
+              </p>
             </div>
           )}
 

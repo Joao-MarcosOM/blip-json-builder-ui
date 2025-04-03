@@ -29,8 +29,26 @@ export const useProcessingTimer = () => {
     timerRef.current = setInterval(() => {
       setProcessingTime(prev => {
         const newTime = prev + 1;
-        // Even slower progress animation: max 60% until complete, increase at 1% per second
-        setProgressValue(Math.min(newTime * 1, 60)); 
+        
+        // Very slow progress animation: max 90% until complete, with slowing rate
+        // This allows for up to 4 minutes of processing time
+        let newProgress = 0;
+        
+        if (newTime < 60) {
+          // First minute: go to 30%
+          newProgress = Math.min(30 * (newTime / 60), 30);
+        } else if (newTime < 120) {
+          // Second minute: go from 30% to 50%
+          newProgress = 30 + Math.min(20 * ((newTime - 60) / 60), 20);
+        } else if (newTime < 180) {
+          // Third minute: go from 50% to 70%
+          newProgress = 50 + Math.min(20 * ((newTime - 120) / 60), 20);
+        } else {
+          // Fourth minute and beyond: go from 70% to 90% max
+          newProgress = 70 + Math.min(20 * ((newTime - 180) / 60), 20);
+        }
+        
+        setProgressValue(newProgress);
         return newTime;
       });
     }, 1000);
