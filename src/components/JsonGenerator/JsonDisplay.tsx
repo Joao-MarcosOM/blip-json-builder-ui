@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Copy, Check, AlertTriangle } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
@@ -10,10 +10,36 @@ interface JsonDisplayProps {
 
 const JsonDisplay: React.FC<JsonDisplayProps> = ({ jsonResponse }) => {
   const [copied, setCopied] = useState(false);
+  const [formattedJson, setFormattedJson] = useState<string>(jsonResponse);
+
+  useEffect(() => {
+    // Format the JSON for display
+    try {
+      if (jsonResponse) {
+        // Check if jsonResponse is already a string
+        if (typeof jsonResponse === 'string') {
+          try {
+            // If it's valid JSON string, parse and format it nicely
+            const parsed = JSON.parse(jsonResponse);
+            setFormattedJson(JSON.stringify(parsed, null, 2));
+          } catch (e) {
+            // If it's not valid JSON, just use the raw string
+            setFormattedJson(jsonResponse);
+          }
+        } else {
+          // If jsonResponse is already an object, stringify it
+          setFormattedJson(JSON.stringify(jsonResponse, null, 2));
+        }
+      }
+    } catch (e) {
+      console.error('Error formatting JSON:', e);
+      setFormattedJson(String(jsonResponse));
+    }
+  }, [jsonResponse]);
 
   const handleCopyToClipboard = () => {
-    if (jsonResponse) {
-      navigator.clipboard.writeText(jsonResponse);
+    if (formattedJson) {
+      navigator.clipboard.writeText(formattedJson);
       setCopied(true);
       toast({
         title: "Copiado!",
@@ -26,11 +52,15 @@ const JsonDisplay: React.FC<JsonDisplayProps> = ({ jsonResponse }) => {
   // Ensure we have valid JSON
   let validJson = true;
   try {
-    if (jsonResponse) {
-      JSON.parse(jsonResponse);
+    if (formattedJson && typeof formattedJson === 'string') {
+      JSON.parse(formattedJson);
     }
   } catch (e) {
     validJson = false;
+  }
+
+  if (!formattedJson) {
+    return null;
   }
 
   return (
@@ -60,7 +90,7 @@ const JsonDisplay: React.FC<JsonDisplayProps> = ({ jsonResponse }) => {
       )}
       
       <div className="bg-gray-100 p-4 rounded-md overflow-x-auto text-xs max-h-96 overflow-y-auto">
-        <pre className="whitespace-pre-wrap break-words">{jsonResponse}</pre>
+        <pre className="whitespace-pre-wrap break-words">{formattedJson}</pre>
       </div>
     </div>
   );

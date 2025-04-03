@@ -29,8 +29,8 @@ export const useProcessingTimer = () => {
     timerRef.current = setInterval(() => {
       setProcessingTime(prev => {
         const newTime = prev + 1;
-        // Slower progress animation: max 70% until complete, increase at 2% per second
-        setProgressValue(Math.min(newTime * 2, 70)); 
+        // Even slower progress animation: max 60% until complete, increase at 1% per second
+        setProgressValue(Math.min(newTime * 1, 60)); 
         return newTime;
       });
     }, 1000);
