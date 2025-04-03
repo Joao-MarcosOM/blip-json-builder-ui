@@ -15,7 +15,7 @@ import { generateJsonBuilder } from '@/services/jsonBuilderService';
 const ImageUploader = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [jsonResponse, setJsonResponse] = useState<string | null>(null);
+  const [jsonResponse, setJsonResponse] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const { processingTime, progressValue, startTimer, stopTimer } = useProcessingTimer();
 
@@ -45,12 +45,12 @@ const ImageUploader = () => {
       formData.append('file', selectedFile);
       formData.append('purpose', 'assistants');
 
-      // Make the actual API call and get the response
+      // Make the API call
       const response = await generateJsonBuilder(formData);
       
-      // Stop the timer and set the JSON response directly from the API
+      // Successfully received response
       stopTimer();
-      setJsonResponse(JSON.stringify(response, null, 2));
+      setJsonResponse(response);
       
       toast({
         title: "Sucesso!",

@@ -8,23 +8,30 @@ export const generateJsonBuilder = async (formData: FormData) => {
     
     console.log('Making API request to:', `${baseUrl}/builderJson/generateBuilder`);
     
-    const response = await fetch(`${baseUrl}/builderJson/generateBuilder`, {
+    // Create custom fetch options to handle CORS properly
+    const requestOptions = {
       method: 'POST',
       body: formData,
       headers: {
         'Accept': 'application/json',
       },
-      // Add credentials to handle CORS properly
-      credentials: 'include',
-    });
+      // Using 'same-origin' for localhost or omit for cross-origin
+      credentials: 'include' as RequestCredentials,
+      mode: 'cors' as RequestMode,
+    };
+    
+    // Attempt the fetch with our custom options
+    const response = await fetch(`${baseUrl}/builderJson/generateBuilder`, requestOptions);
 
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(`Error: ${response.status} - ${errorText || response.statusText}`);
     }
 
-    // Return the actual response from the API
-    return await response.json();
+    // Parse and return the response
+    const result = await response.json();
+    console.log('API Response received:', result);
+    return result;
   } catch (error) {
     console.error('API Error:', error);
     

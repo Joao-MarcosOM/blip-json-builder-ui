@@ -5,34 +5,35 @@ import { Copy, Check, AlertTriangle } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 
 interface JsonDisplayProps {
-  jsonResponse: string;
+  jsonResponse: any; // Accept any type of response
 }
 
 const JsonDisplay: React.FC<JsonDisplayProps> = ({ jsonResponse }) => {
   const [copied, setCopied] = useState(false);
-  const [formattedJson, setFormattedJson] = useState<string>(jsonResponse);
+  const [formattedJson, setFormattedJson] = useState<string>("");
 
   useEffect(() => {
     // Format the JSON for display
     try {
       if (jsonResponse) {
-        // Check if jsonResponse is already a string
+        // Format based on the type of response
         if (typeof jsonResponse === 'string') {
           try {
-            // If it's valid JSON string, parse and format it nicely
+            // If it's a valid JSON string, parse and format it
             const parsed = JSON.parse(jsonResponse);
             setFormattedJson(JSON.stringify(parsed, null, 2));
           } catch (e) {
-            // If it's not valid JSON, just use the raw string
+            // If parsing fails, use the raw string
             setFormattedJson(jsonResponse);
           }
         } else {
-          // If jsonResponse is already an object, stringify it
+          // If it's already an object/array, stringify it
           setFormattedJson(JSON.stringify(jsonResponse, null, 2));
         }
       }
     } catch (e) {
       console.error('Error formatting JSON:', e);
+      // Fallback to string representation if formatting fails
       setFormattedJson(String(jsonResponse));
     }
   }, [jsonResponse]);
@@ -48,16 +49,6 @@ const JsonDisplay: React.FC<JsonDisplayProps> = ({ jsonResponse }) => {
       setTimeout(() => setCopied(false), 2000);
     }
   };
-
-  // Ensure we have valid JSON
-  let validJson = true;
-  try {
-    if (formattedJson && typeof formattedJson === 'string') {
-      JSON.parse(formattedJson);
-    }
-  } catch (e) {
-    validJson = false;
-  }
 
   if (!formattedJson) {
     return null;
@@ -77,17 +68,6 @@ const JsonDisplay: React.FC<JsonDisplayProps> = ({ jsonResponse }) => {
           {copied ? "Copiado!" : "Copiar"}
         </Button>
       </div>
-      
-      {!validJson && (
-        <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-md mb-2">
-          <div className="flex">
-            <AlertTriangle className="h-5 w-5 text-yellow-500 mr-2" />
-            <p className="text-sm text-yellow-700">
-              A resposta não parece ser um JSON válido, mas ainda é possível copiá-la.
-            </p>
-          </div>
-        </div>
-      )}
       
       <div className="bg-gray-100 p-4 rounded-md overflow-x-auto text-xs max-h-96 overflow-y-auto">
         <pre className="whitespace-pre-wrap break-words">{formattedJson}</pre>
