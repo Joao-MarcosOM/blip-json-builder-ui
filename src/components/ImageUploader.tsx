@@ -4,8 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, AlertCircle } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
+<<<<<<< HEAD
 
 // Import new components
+=======
+>>>>>>> 8883675424abdf82c6b170bfc605981eb4e87625
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import FileUploadArea from './JsonGenerator/FileUploadArea';
 import JsonDisplay from './JsonGenerator/JsonDisplay';
@@ -48,10 +51,14 @@ const ImageUploader = () => {
       formData.append('file', selectedFile);
       formData.append('purpose', 'assistants');
 
+<<<<<<< HEAD
       // Make the API call
       const response = await generateJsonBuilder(formData, generationType);
       
       // Successfully received response
+=======
+      const response = await generateJsonBuilder(formData, generationType);
+>>>>>>> 8883675424abdf82c6b170bfc605981eb4e87625
       stopTimer();
       setJsonResponse(response);
       
