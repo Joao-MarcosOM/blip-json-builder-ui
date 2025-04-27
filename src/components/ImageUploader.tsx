@@ -6,17 +6,20 @@ import { Loader2, AlertCircle } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 
 // Import new components
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import FileUploadArea from './JsonGenerator/FileUploadArea';
 import JsonDisplay from './JsonGenerator/JsonDisplay';
 import ProcessingIndicator from './JsonGenerator/ProcessingIndicator';
 import { useProcessingTimer } from '@/hooks/useProcessingTimer';
 import { generateJsonBuilder } from '@/services/jsonBuilderService';
+import { Label } from "@/components/ui/label";
 
 const ImageUploader = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [jsonResponse, setJsonResponse] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [generationType, setGenerationType] = useState<'full' | 'blocks'>('full');
   const { processingTime, progressValue, startTimer, stopTimer } = useProcessingTimer();
 
   const handleFileChange = (file: File) => {
@@ -46,7 +49,7 @@ const ImageUploader = () => {
       formData.append('purpose', 'assistants');
 
       // Make the API call
-      const response = await generateJsonBuilder(formData);
+      const response = await generateJsonBuilder(formData, generationType);
       
       // Successfully received response
       stopTimer();
@@ -85,6 +88,25 @@ const ImageUploader = () => {
           <CardDescription>Faça upload de uma imagem para gerar o JSON Builder</CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
+          <div className="mb-6">
+            <Label className="text-base font-medium mb-3 block">Tipo de Geração</Label>
+            <RadioGroup
+              defaultValue="full"
+              value={generationType}
+              onValueChange={(value) => setGenerationType(value as 'full' | 'blocks')}
+              className="flex flex-col space-y-2"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="full" id="full" />
+                <Label htmlFor="full" className="cursor-pointer">JSON Builder Completo</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="blocks" id="blocks" />
+                <Label htmlFor="blocks" className="cursor-pointer">Apenas Blocos do Builder</Label>
+              </div>
+            </RadioGroup>
+          </div>
+
           <FileUploadArea 
             selectedFile={selectedFile} 
             onFileChange={handleFileChange} 
