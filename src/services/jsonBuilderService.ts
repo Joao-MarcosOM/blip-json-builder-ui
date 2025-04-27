@@ -1,15 +1,14 @@
-export const generateJsonBuilder = async (formData: FormData) => {
+export const generateJsonBuilder = async (formData: FormData, type: 'full' | 'blocks') => {
   try {
-    // Define base URL dinamicamente (pode usar variável de ambiente no futuro)
     const isLocalhost = window.location.hostname === 'localhost';
     const baseUrl = isLocalhost
       ? 'http://127.0.0.1:8080'
-      : 'http://127.0.0.1:8080'; // Substitua pela URL real em produção
+      : 'http://127.0.0.1:8080';
 
-      console.log('Enrou');
+    const endpoint = type === 'full' 
+      ? `${baseUrl}/builderJson/generateBuilder`
+      : `${baseUrl}/builderJson/generateBlocks`;
 
-
-    const endpoint = `${baseUrl}/builderJson/generateBuilder`;
     console.log('Fazendo requisição para:', endpoint);
 
     // Loga conteúdo do formData para debug
@@ -24,7 +23,7 @@ export const generateJsonBuilder = async (formData: FormData) => {
       headers: {
         'Accept': 'application/json',
       },
-      credentials: 'include', // Garante que cookies sejam enviados, se necessário
+      credentials: 'include',
       mode: 'cors',
     };
 
